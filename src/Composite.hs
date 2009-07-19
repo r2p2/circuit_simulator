@@ -1,7 +1,10 @@
-module Composite (CompositeCircuit, makeNand, makeRSFlipFlop, makeRegister) where
+module Composite (CompositeCircuit, makeNand,
+                  makeRSFlipFlop, makeDFlipFlop, makeRegister,
+                  makeFullAdder, makeRippleCarryAdder,
+                  makeCounter) where
 
 import Data.List (intercalate)
-import Control.Monad (forM_)
+import Control.Monad (forM_, foldM_)
 import IntegratedCircuit
 import LogicGates
 
@@ -54,25 +57,19 @@ makeRSFlipFlop = makeComposite ["ns", "nr"] ["q", "nq"] $
 -}
 makeDFlipFlop :: CompositeCircuit
 makeDFlipFlop = makeComposite ["clock", "data"] ["q", "nq"] $
-                do addComponent NotGate ["not-in"] ["not-out"]
-                   addComponent makeNand ["nand1-in1", "nand1-in2"] ["nand1-out"]
-                   addComponent makeNand ["nand2-in1", "nand2-in2"] ["nand2-out"]
-                   addComponent makeRSFlipFlop ["rs-ns", "rs-nr"] ["rs-q", "rs-nq"]
-                   connect "data" "not-in"
-                   connect "data" "nand1-in1"
-                   connect "clock" "nand1-in2"
-                   connect "clock" "nand2-in1"
+                do addComponent NotGate ["data"] ["not-out"]
+                   addComponent makeNand ["data", "clock"] ["nand1-out"]
+                   addComponent makeNand ["clock", "nand2-in2"] ["nand2-out"]
+                   addComponent makeRSFlipFlop ["rs-ns", "rs-nr"] ["q", "nq"]
                    connect "not-out" "nand2-in2"
                    connect "nand1-out" "rs-ns"
                    connect "nand2-out" "rs-nr"
-                   connect "rs-q" "q"
-                   connect "rs-nq" "nq"
 
 -- http://de.wikipedia.org/wiki/Flipflop#Breite_Verwendung_in_der_Digitalelektronik
 makeRegister :: Int  -- ^bit width
              -> CompositeCircuit
-makeRegister width = makeComposite ("interface-clock":(names "interface-d"))
-                                   (names "interface-q") $
+makeRegister width = makeComposite ("clock":(names "d"))
+                                   (names "q") $
                      do forM_ range $ \i ->
                             do let iS = show i
                                    clock = "clock" ++ iS
