@@ -1,16 +1,19 @@
-
-module Clock where
+module Clock (makeClock, Clock) where
 
 import IntegratedCircuit
 
 type Every = Int
 type Counter = Int
 
-data Clock = Clock Every Counter Pin deriving (Show)     -- o1
+data Clock = Clock Every Counter Pin
+             deriving (Show)
+
+makeClock :: Every -> Clock
+makeClock every = Clock every 0 False
 
 instance IntegratedCircuitComponent Clock where
---  tick (Clock every every o1) = Clock every 0 (not o1)
---  tick (Clock every counter o1) = Clock every (counter+1) o1
-  tick (Clock every counter o1)
-    | every == counter = Clock every 0 (not o1)
-    | otherwise        = Clock every (counter+1) o1
+  tick (Clock every counter pin) []
+    | every <= counter = let pin' = not pin
+                         in (Clock every 0 pin', [pin'])
+    | otherwise        = let counter' = counter + 1
+                         in (Clock every counter' pin, [pin])
