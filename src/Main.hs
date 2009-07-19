@@ -3,6 +3,7 @@ module Main where
 import IntegratedCircuit
 import LogicGates
 import Clock
+import Composite
 
 main :: IO ()
 main = do let initialState = build
@@ -37,7 +38,7 @@ build = new $
            addComponent (makeClock 75) [] ["t4"]
            addComponent AndGate ["in1", "in2"] ["out1"]
            addComponent AndGate ["in3", "in4"] ["out2"]
-           addComponent OrGate ["in5", "in6"] ["out0"]
+           addComponent makeNand ["in5", "in6"] ["out0"]
            connect "t1" "in1"
            connect "t2" "in2"
            connect "t3" "in3"
