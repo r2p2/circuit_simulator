@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification,ImpredicativeTypes, RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification, ImpredicativeTypes, RankNTypes #-}
 module IntegratedCircuit (Pin, Register, IntegratedCircuitComponent, tick,
                           newState, addComponent, connect,
                           CircuitState, Circuit,
@@ -18,11 +18,13 @@ class Show a => IntegratedCircuitComponent a where
 	tick :: a -> [Pin] -> (a, [Pin])
 
 
+-- |Wrapped and no plain triple, because existential type
 data StateComponent = forall c. (IntegratedCircuitComponent c, Show c)
     => Component c [String] [String]
 
 data CircuitState = CircuitState { stateComponents :: [StateComponent],
-                                   stateConnections :: [(String, String)],
+                                   stateConnections :: [(String,  -- ^Output name
+                                                         String)],  -- ^Input name
                                    stateInputs :: Map.Map String Pin,
                                    stateOutputs :: Map.Map String Pin,
                                    stateTime :: Integer
