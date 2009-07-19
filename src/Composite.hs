@@ -72,11 +72,9 @@ makeRegister width = makeComposite ("clock":(names "d"))
                                    (names "q") $
                      do forM_ range $ \i ->
                             do let iS = show i
-                                   clock = "clock" ++ iS
-                                   d = "d" ++ iS
-                                   q = "q" ++ iS
-                                   nq = "nq" ++ iS
-                               addComponent makeDFlipFlop [clock, d] [q, nq]
+                               addComponent makeDFlipFlop
+                                            ["clock" ++ iS, "d" ++ iS]
+                                            ["q" ++ iS, "nq" ++ iS]
     where w = width - 1
           range = [0..w]
           names prefix = map ((prefix ++) . show) range
