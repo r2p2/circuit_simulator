@@ -60,9 +60,9 @@ addComponent component inputs outputs
 connect :: String  -- ^output name
         -> String  -- ^input name
         -> Circuit ()
-connect input output
+connect output input
     = modifyState $
-      \st -> st { stateConnections = (input, output):(stateConnections st) }
+      \st -> st { stateConnections = (output, input):(stateConnections st) }
 
 tickState :: Circuit ()
 tickState
@@ -83,6 +83,8 @@ tickState
          let connections = stateConnections st
          forM_ connections $
                    \(output, input) ->
+                       {-trace ("transferring from " ++
+                              output ++ " to " ++ input) $-}
                        getOutput output >>=
                        setInput input
          -- Done
