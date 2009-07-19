@@ -77,9 +77,53 @@ makeRegister width = makeComposite ("clock":(names "d"))
                                    q = "q" ++ iS
                                    nq = "nq" ++ iS
                                addComponent makeDFlipFlop [clock, d] [q, nq]
-                               connect "interface-clock" clock
-                               connect ("interface-d" ++ iS) d
-                               connect q ("interface-q" ++ iS)
+    where w = width - 1
+          range = [0..w]
+          names prefix = map ((prefix ++) . show) range
+
+-- http://en.wikipedia.org/wiki/Adder_%28electronics%29#Full_adder
+makeFullAdder :: CompositeCircuit
+makeFullAdder = makeComposite ["a", "b", "c-in"] ["s", "c-out"] $
+                do addComponent XorGate ["a", "b"] ["xor1-out"]
+                   addComponent XorGate ["xor2-in1", "c-in"] ["s"]
+                   addComponent AndGate ["a", "b"] ["and1-out"]
+                   addComponent AndGate ["and2-in1", "c-in"] ["and2-out"]
+                   addComponent OrGate ["or-in1", "or-in2"] ["c-out"]
+                   connect "xor1-out" "xor2-in1"
+                   connect "xor1-out" "and2-in1"
+                   connect "and1-out" "or-in1"
+                   connect "and2-out" "or-in2"
+
+-- http://en.wikipedia.org/wiki/Adder_%28electronics%29#Ripple_carry_adder
+makeRippleCarryAdder :: Int  -- ^bit width
+                     -> CompositeCircuit
+makeRippleCarryAdder width = makeComposite ((names "a") ++ (names "b"))
+                                           (names "s") $
+                             do foldM_ (\prevC i ->
+                                            do let iS = show i
+                                               addComponent makeFullAdder
+                                                            ["a" ++ iS, "b" ++ iS, "ci" ++ iS]
+                                                            ["s" ++ iS, "co" ++ iS]
+                                               connect prevC ("ci" ++ iS)
+                                               return $ "co" ++ iS
+                                       ) "cNull" range
+    where w = width - 1
+          range = [0..w]
+          names prefix = map ((prefix ++) . show) range
+
+makeCounter :: Int
+            -> CompositeCircuit
+makeCounter width = makeComposite ["trigger"] (names "o") $
+                    do addComponent (makeRegister width)
+                                    ("trigger":(names "reg-in"))
+                                    (names "reg-out")
+                       addComponent (makeRippleCarryAdder width)
+                                    ((replicate width "trigger") ++ (names "add-b"))
+                                    (names "o")
+                       forM_ range $ \i ->
+                           do let iS = show i
+                              connect ("add-s" ++ iS) ("reg-in" ++ iS)
+                              connect ("reg-out" ++ iS) ("add-b" ++ iS)
     where w = width - 1
           range = [0..w]
           names prefix = map ((prefix ++) . show) range
