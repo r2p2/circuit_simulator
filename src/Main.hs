@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Monad (forM)
 import IntegratedCircuit
 import LogicGates
 import Clock
@@ -10,38 +11,22 @@ main = do let initialState = build
           loop initialState
 
 loop :: CircuitState -> IO ()
-loop st = do let ((t, out0), st') =
+loop st = do let ((t, outs), st') =
                      runState st $
                               do tickState
-                                 out0' <- getOutput "out0"
+                                 outs' <- forM [0..8] $ getOutput . ("counter-output" ++) . show
                                  t' <- getTime
-                                 return (t', out0')
-             putStrLn $ (show t) ++ ": out0=" ++ (show out0)
+                                 return (t', outs')
+             putStrLn $ (show t) ++ ": " ++ (show outs)
              loop st'
 
-{-             ___
- [ 50 ] in1 --|   |out1
-              | & |-----.   ___
- [100 ] in2 --|___|     `--|   |out0
-                        in5|>=1|---
-               ___      in6|   |
- [ 25 ] in3 --|   |out2 .--|___|
-              | & |-----´
- [ 75 ] in4 --|___|
--}
 
 build :: CircuitState
 build = new $
-        do addComponent (makeClock 50) [] ["t1"]
-           addComponent (makeClock 100) [] ["t2"]
-           addComponent (makeClock 25) [] ["t3"]
-           addComponent (makeClock 75) [] ["t4"]
-           addComponent AndGate ["in1", "in2"] ["out1"]
-           addComponent AndGate ["in3", "in4"] ["out2"]
-           addComponent makeNand ["in5", "in6"] ["out0"]
-           connect "t1" "in1"
-           connect "t2" "in2"
-           connect "t3" "in3"
-           connect "t4" "in4"
-           connect "out1" "in5"
-           connect "out2" "in6"
+        do addComponent (ConstGate True) [] ["const-out"]
+           addComponent (makeCounter width) ["counter-trigger"] (names "counter-output")
+           connect "const-out" "counter-trigger"
+    where width = 8
+          w = width - 1
+          range = [0..w]
+          names prefix = map ((prefix ++) . show) range
