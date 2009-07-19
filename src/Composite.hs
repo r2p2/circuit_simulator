@@ -1,6 +1,7 @@
 module Composite (CompositeCircuit, makeNand, makeRSFlipFlop, makeRegister) where
 
 import Data.List (intercalate)
+import Control.Monad (forM_)
 import IntegratedCircuit
 import LogicGates
 
@@ -70,8 +71,8 @@ makeDFlipFlop = makeComposite ["clock", "data"] ["q", "nq"] $
 -- http://de.wikipedia.org/wiki/Flipflop#Breite_Verwendung_in_der_Digitalelektronik
 makeRegister :: Int  -- ^bit width
              -> CompositeCircuit
-makeRegister width = makeComposite "interface-clock":(names "interface-d")
-                                   (names "interface-q")
+makeRegister width = makeComposite ("interface-clock":(names "interface-d"))
+                                   (names "interface-q") $
                      do forM_ range $ \i ->
                             do let iS = show i
                                    clock = "clock" ++ iS
