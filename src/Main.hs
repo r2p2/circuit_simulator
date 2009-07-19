@@ -30,8 +30,7 @@ loop st = do let ((t, out0), st') =
 -}
 
 build :: CircuitState
-build = snd $
-        runState newState $
+build = new $
         do addComponent (makeClock 50) [] ["t1"]
            addComponent (makeClock 100) [] ["t2"]
            addComponent (makeClock 25) [] ["t3"]

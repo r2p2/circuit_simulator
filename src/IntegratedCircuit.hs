@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification, ImpredicativeTypes, RankNTypes #-}
 module IntegratedCircuit (Pin, Register, IntegratedCircuitComponent, tick,
-                          newState, addComponent, connect,
+                          new, newState, addComponent, connect,
                           CircuitState, Circuit,
                           runState, tickState, setInput, getOutput, getTime
                          ) where
@@ -31,6 +31,9 @@ data CircuitState = CircuitState { stateComponents :: [StateComponent],
                                  }
 
 type Circuit a = State CircuitState a
+
+new :: Circuit a -> CircuitState
+new = snd . runState newState
 
 newState :: CircuitState
 newState = CircuitState [] [] Map.empty Map.empty 0
